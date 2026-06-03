@@ -1,0 +1,44 @@
+# Python
+__pycache__/
+*.pyc
+*.pyo
+.venv/
+*.egg-info/
+dist/
+build/
+gadmin.egg-info/
+
+# Environment & secrets
+.env
+
+# Runtime data
+data/
+logs/
+
+# Frontend
+frontend/node_modules/
+frontend/dist/
+
+# Databases
+*.db
+*.db-shm
+*.db-wal
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Claude Code project settings (may contain local paths)
+.claude/
+
+# Scratch / test files
+email_sig_test.txt
+*.duckdb
+
+# Original spreadsheet (contains real data)
+*.xlsm
+*.xlsx
+*.xls
+
+# Root-level package-lock (frontend lock is in frontend/)
+/package-lock.json
