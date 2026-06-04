@@ -408,6 +408,132 @@ tr:hover td { background: var(--bg); }
 .alert-ok { background: var(--green-lt); color: var(--green); }
 .alert-warn { background: var(--amber-lt); color: var(--amber); }
 
+/* ─── Signatures ─────────────────────────────────────────────────────────────── */
+.sig-tmpl-card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 16px;
+  margin-bottom: 20px;
+}
+.sig-tmpl-header {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  flex-wrap: wrap;
+  margin-bottom: 10px;
+}
+.sig-vars { display: flex; flex-wrap: wrap; gap: 4px; }
+.sig-var {
+  background: var(--bg);
+  border: 1px solid var(--border);
+  border-radius: 3px;
+  padding: 1px 5px;
+  font-size: 11px;
+  font-family: monospace;
+  color: var(--blue);
+  cursor: default;
+}
+.sig-tmpl-textarea {
+  width: 100%;
+  min-height: 120px;
+  font-family: monospace;
+  font-size: 12px;
+  resize: vertical;
+}
+.sig-body {
+  display: flex;
+  gap: 16px;
+  height: 560px;
+}
+.sig-user-panel {
+  width: 340px;
+  flex-shrink: 0;
+  display: flex;
+  flex-direction: column;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  background: var(--surface);
+  overflow: hidden;
+}
+.sig-user-toolbar {
+  display: flex;
+  gap: 8px;
+  padding: 10px;
+  border-bottom: 1px solid var(--border);
+}
+.sig-select-all {
+  padding: 6px 12px;
+  border-bottom: 1px solid var(--border);
+  cursor: pointer;
+}
+.sig-list {
+  flex: 1;
+  overflow-y: auto;
+}
+.sig-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 8px 12px;
+  cursor: pointer;
+  border-bottom: 1px solid var(--border);
+  transition: background 0.1s;
+}
+.sig-row:hover { background: var(--bg); }
+.sig-row--active { background: var(--blue-lt); }
+[data-theme="dark"] .sig-row--active { background: var(--blue-lt); }
+.sig-row-info { display: flex; flex-direction: column; flex: 1; min-width: 0; }
+.sig-row-name { font-size: 13px; font-weight: 500; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.sig-row-meta { font-size: 11px; color: var(--muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.sig-status { font-size: 13px; font-weight: 700; flex-shrink: 0; width: 16px; text-align: center; }
+.sig-status--pending { color: var(--muted); }
+.sig-status--ok      { color: var(--green); }
+.sig-status--fail    { color: var(--red); cursor: help; }
+.sig-push-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 10px 12px;
+  border-top: 1px solid var(--border);
+  background: var(--bg);
+}
+.sig-preview-panel {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  background: var(--surface);
+  overflow: hidden;
+  min-width: 0;
+}
+.sig-preview-header {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 14px;
+  border-bottom: 1px solid var(--border);
+  background: var(--bg);
+  flex-shrink: 0;
+}
+.sig-preview-frame {
+  flex: 1;
+  border: none;
+  width: 100%;
+  background: #fff;
+}
+.sig-preview-empty {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--muted);
+  font-size: 13px;
+  padding: 24px;
+  text-align: center;
+}
+
 /* ─── Progress bar ───────────────────────────────────────────────────────────── */
 .progress-wrap { display: flex; flex-direction: column; gap: 4px; margin-top: 8px; }
 .progress-track {

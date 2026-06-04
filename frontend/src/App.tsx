@@ -8,6 +8,7 @@ import { History } from './pages/History'
 import { Admin } from './pages/Admin'
 import { Tools } from './pages/Tools'
 import { Archive } from './pages/Archive'
+import { Signatures } from './pages/Signatures'
 import { Help } from './pages/Help'
 
 function GamBanner({ status }: { status: GamStatus | null }) {
@@ -59,6 +60,7 @@ export default function App() {
         <NavLink className="nav-link" to="/history">History</NavLink>
         <NavLink className="nav-link" to="/tools">Tools</NavLink>
         <NavLink className="nav-link" to="/archive">Archive</NavLink>
+        <NavLink className="nav-link" to="/signatures">Signatures</NavLink>
         <NavLink className="nav-link" to="/admin">Admin</NavLink>
         <NavLink className="nav-link" to="/help">Help</NavLink>
         <span className="nav-spacer" />
@@ -87,6 +89,7 @@ export default function App() {
         <Route path="/history" element={<History />} />
         <Route path="/tools" element={<Tools adminName={adminName} />} />
         <Route path="/archive" element={<Archive adminName={adminName} />} />
+        <Route path="/signatures" element={<Signatures adminName={adminName} />} />
         <Route path="/admin" element={<Admin adminName={adminName} />} />
         <Route path="/help" element={<Help />} />
       </Routes>

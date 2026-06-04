@@ -24,6 +24,7 @@ from app.api.gam import router as gam_router
 from app.api.admin import router as admin_router
 from app.api.tools import router as tools_router
 from app.api.archive import router as archive_router
+from app.api.signatures import router as signatures_router
 
 log = logging.getLogger(__name__)
 
@@ -61,7 +62,7 @@ app.add_middleware(RequestLogMiddleware)
 app.add_exception_handler(Exception, global_exception_handler)
 
 _API = "/api"
-for r in [onboard_router, offboard_router, employees_router, gam_router, admin_router, tools_router, archive_router]:
+for r in [onboard_router, offboard_router, employees_router, gam_router, admin_router, tools_router, archive_router, signatures_router]:
     app.include_router(r, prefix=_API)
 
 

@@ -40,6 +40,21 @@ export const api = {
     get: (id: number) => request<EmployeeDetail>(`/api/employees/${id}`),
   },
 
+  signatures: {
+    users: (refresh = false) =>
+      request<{ users: WorkspaceUser[] }>(`/api/signatures/users${refresh ? '?refresh=true' : ''}`),
+    preview: (userEmail: string, template: string) =>
+      request<{ html: string }>('/api/signatures/preview', {
+        method: 'POST',
+        body: JSON.stringify({ user_email: userEmail, template }),
+      }),
+    push: (userEmail: string, template: string, adminName: string) =>
+      request<{ success: boolean; stderr: string }>('/api/signatures/push', {
+        method: 'POST',
+        body: JSON.stringify({ user_email: userEmail, template, admin_name: adminName }),
+      }),
+  },
+
   archive: {
     start: (targetEmail: string, destination: string, localPath: string, adminName: string) =>
       request<{ job_id: number }>('/api/archive/start', {
@@ -185,6 +200,14 @@ export interface AuditEntry {
   old_value: string | null
   new_value: string | null
   created_at: string
+}
+
+export interface WorkspaceUser {
+  email: string
+  full_name: string
+  first_name: string
+  last_name: string
+  job_title: string
 }
 
 export interface ArchiveJob {
