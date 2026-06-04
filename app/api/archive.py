@@ -1,7 +1,5 @@
 import asyncio
 import logging
-import shutil
-import tempfile
 from datetime import datetime
 from pathlib import Path
 
@@ -96,20 +94,32 @@ def _update(job_id: int, **kwargs):
 
 
 async def _run(job_id: int, target_email: str, destination: str, local_path_str: str):
+    from app.config import settings as app_settings
     from app.services.gmail_archiver import archive_inbox
     from app.services.drive_uploader import upload_to_shared_drive
 
     _update(job_id, status="running", step="Starting…")
 
-    tmp_dir = tempfile.mkdtemp(prefix="gadmin_archive_")
     try:
-        inbox_db = Path(tmp_dir) / "inbox.db"
         sa_path = get_setting("gam_service_account_path")
         if not sa_path:
             raise ValueError(
                 "gam_service_account_path is not configured. "
                 "Set it in Admin → Settings to the full path of your GAM oauth2service.json file."
             )
+
+        # Write the DB directly to the destination — no temp dir.
+        # Progress is preserved across server restarts; restarting a job resumes automatically.
+        if destination == "shared_drive":
+            # Stable staging folder under data/archives/
+            safe = target_email.lower().replace("@", "_at_").replace("/", "_")
+            db_dir = app_settings.data_dir / "archives" / safe
+        else:
+            # Write directly to the path the user specified
+            db_dir = Path(local_path_str)
+
+        db_dir.mkdir(parents=True, exist_ok=True)
+        inbox_db = db_dir / "inbox.db"
 
         def on_progress(stats, step_msg):
             _update(
@@ -126,9 +136,8 @@ async def _run(job_id: int, target_email: str, destination: str, local_path_str:
             on_progress=on_progress,
         )
 
-        _update(job_id, step="Uploading…")
-
         if destination == "shared_drive":
+            _update(job_id, step="Uploading to Drive…")
             shared_drive_id = get_setting("archive_drive_id")
             admin_email = get_setting(
                 "archive_admin_email",
@@ -150,14 +159,11 @@ async def _run(job_id: int, target_email: str, destination: str, local_path_str:
                 completed_at=datetime.now().isoformat(),
             )
         else:
-            dest = Path(local_path_str) / target_email
-            dest.mkdir(parents=True, exist_ok=True)
-            shutil.copy2(inbox_db, dest / "inbox.db")
             _update(
                 job_id,
                 status="complete",
                 step="Complete",
-                folder_url=str(dest),
+                folder_url=str(inbox_db),
                 completed_at=datetime.now().isoformat(),
             )
 
@@ -170,5 +176,3 @@ async def _run(job_id: int, target_email: str, destination: str, local_path_str:
             error=str(exc),
             completed_at=datetime.now().isoformat(),
         )
-    finally:
-        shutil.rmtree(tmp_dir, ignore_errors=True)

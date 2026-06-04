@@ -129,8 +129,11 @@ export function Archive({ adminName }: Props) {
               className="input mono"
               value={localPath}
               onChange={e => setLocalPath(e.target.value)}
-              placeholder="D:\Backups"
+              placeholder="D:\Projects_Tasks\BU\Inbox\Inbox_2026_06_04"
             />
+            <div className="muted" style={{ fontSize: 11, marginTop: 4 }}>
+              inbox.db is written directly to this folder. Progress survives restarts — starting a new job resumes from where it left off.
+            </div>
           </div>
         )}
 
