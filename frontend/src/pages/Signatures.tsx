@@ -121,12 +121,13 @@ export function Signatures({ adminName }: Props) {
           return { email, status: (e as Error).message }
         }
       }))
+      // Count synchronously before setState queues the update
+      outcomes.forEach(({ status }) => {
+        status === 'ok' ? counts.ok++ : counts.fail++
+      })
       setResults(prev => {
         const n = { ...prev }
-        outcomes.forEach(({ email, status }) => {
-          n[email] = status
-          status === 'ok' ? counts.ok++ : counts.fail++
-        })
+        outcomes.forEach(({ email, status }) => { n[email] = status })
         return n
       })
     }
