@@ -17,7 +17,7 @@ async function request<T>(path: string, options?: RequestInit): Promise<T> {
 // --- GAM ---
 export const api = {
   gam: {
-    status: () => request<GamStatus>('/api/gam/status'),
+    status: (refresh = false) => request<GamStatus>(`/api/gam/status${refresh ? '?refresh=true' : ''}`),
   },
 
   onboard: {

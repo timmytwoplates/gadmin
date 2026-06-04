@@ -30,9 +30,9 @@ export function Admin({ adminName }: Props) {
     if (tab === 'audit') loadAudit()
   }, [tab, auditPage])
 
-  function checkGam() {
+  function checkGam(force = false) {
     setGamChecking(true)
-    api.gam.status()
+    api.gam.status(force)
       .then(setGamStatus)
       .catch(() => setGamStatus({ installed: false }))
       .finally(() => setGamChecking(false))
@@ -85,7 +85,7 @@ export function Admin({ adminName }: Props) {
         <div className="section">
           <h2 className="section-title">GAM Status</h2>
           <div className="gam-status-row">
-            <button className="btn btn-secondary" onClick={checkGam} disabled={gamChecking}>
+            <button className="btn btn-secondary" onClick={() => checkGam(true)} disabled={gamChecking}>
               {gamChecking ? <Spinner /> : 'Refresh'}
             </button>
             {gamStatus && (

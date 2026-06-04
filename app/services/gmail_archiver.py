@@ -9,6 +9,7 @@ import base64
 import email as email_lib
 import json
 import logging
+import threading
 from concurrent.futures import ThreadPoolExecutor
 from dataclasses import dataclass
 from datetime import datetime
@@ -29,9 +30,12 @@ except ImportError as exc:
 log = logging.getLogger(__name__)
 
 _GMAIL_SCOPE = "https://www.googleapis.com/auth/gmail.readonly"
-_BATCH = 100
-_WORKERS = 20
-_API_SEM = 10
+_BATCH = 50
+_WORKERS = 5    # httplib2 is not thread-safe; keep concurrency low
+_API_SEM = 5
+
+# Per-thread service cache — each thread gets its own httplib2 connection
+_thread_local = threading.local()
 
 
 @dataclass
@@ -54,6 +58,16 @@ def _gmail_service(sa_path: str, target_email: str):
         sa_path, scopes=[_GMAIL_SCOPE]
     ).with_subject(target_email)
     return build("gmail", "v1", credentials=creds, cache_discovery=False)
+
+
+def _thread_service(sa_path: str, target_email: str):
+    """Return a per-thread Gmail service. httplib2 is not thread-safe so each
+    thread must own its own Http connection — never share across threads."""
+    key = f"{sa_path}:{target_email}"
+    if getattr(_thread_local, "key", None) != key:
+        _thread_local.service = _gmail_service(sa_path, target_email)
+        _thread_local.key = key
+    return _thread_local.service
 
 
 # ─── Database ─────────────────────────────────────────────────────────────────
@@ -204,11 +218,9 @@ async def archive_inbox(
     db = _ArchiveDB(output_db)
     await db.init()
 
-    executor = ThreadPoolExecutor(max_workers=4)
+    executor = ThreadPoolExecutor(max_workers=_WORKERS)
     loop = asyncio.get_event_loop()
     run = lambda fn: loop.run_in_executor(executor, fn)  # noqa: E731
-
-    service = await run(lambda: _gmail_service(sa_path, target_email))
     stats = ArchiveStats()
     api_sem = asyncio.Semaphore(_API_SEM)
 
@@ -222,7 +234,8 @@ async def archive_inbox(
         try:
             async with api_sem:
                 result = await run(
-                    lambda pt=page_token: service.users().messages().list(
+                    lambda pt=page_token: _thread_service(sa_path, target_email)
+                    .users().messages().list(
                         userId="me", maxResults=500, pageToken=pt
                     ).execute()
                 )
@@ -250,18 +263,34 @@ async def archive_inbox(
     async def _fetch(mid: str) -> Optional[dict]:
         async with work_sem:
             async with api_sem:
-                try:
-                    raw = await run(
-                        lambda m=mid: service.users().messages().get(
-                            userId="me", id=m, format="full"
-                        ).execute()
-                    )
-                    return _parse(raw)
-                except HttpError as e:
-                    if e.resp.status == 429:
-                        await asyncio.sleep(1)
-                    stats.errors += 1
-                    return None
+                for attempt in range(3):
+                    try:
+                        raw = await run(
+                            lambda m=mid: _thread_service(sa_path, target_email)
+                            .users().messages().get(
+                                userId="me", id=m, format="full"
+                            ).execute()
+                        )
+                        return _parse(raw)
+                    except HttpError as e:
+                        if e.resp.status == 429:
+                            await asyncio.sleep(2 ** attempt * 5)
+                        elif attempt < 2:
+                            await asyncio.sleep(2 ** attempt)
+                        else:
+                            stats.errors += 1
+                            return None
+                    except (AttributeError, OSError, ConnectionResetError, BrokenPipeError) as e:
+                        # httplib2 connection drop — rebuild service on next call
+                        if hasattr(_thread_local, "key"):
+                            del _thread_local.key
+                        if attempt < 2:
+                            await asyncio.sleep(2 ** attempt)
+                        else:
+                            log.warning("Gave up on message %s after 3 attempts: %s", mid, e)
+                            stats.errors += 1
+                            return None
+                return None
 
     for i in range(0, len(ids), _BATCH):
         batch = ids[i: i + _BATCH]
