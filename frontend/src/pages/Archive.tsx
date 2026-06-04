@@ -159,7 +159,7 @@ export function Archive({ adminName }: Props) {
 
           {activeJob.total_messages > 0 && (
             <ProgressBar
-              value={activeJob.pct ?? 0}
+              value={Math.round(activeJob.archived_messages / activeJob.total_messages * 100)}
               label={`${activeJob.archived_messages.toLocaleString()} / ${activeJob.total_messages.toLocaleString()} messages`}
             />
           )}
@@ -175,7 +175,13 @@ export function Archive({ adminName }: Props) {
           )}
           {activeJob.status === 'error' && (
             <div className="tool-result tool-result-fail" style={{ marginTop: 12 }}>
-              {activeJob.error}
+              <strong>Error:</strong> {activeJob.error || '(no details recorded)'}
+              {activeJob.archived_messages > 0 && (
+                <div style={{ marginTop: 6, fontSize: 12 }}>
+                  {activeJob.archived_messages.toLocaleString()} messages were saved before the failure.
+                  Starting a new archive for this account will resume from where it left off.
+                </div>
+              )}
             </div>
           )}
         </div>
@@ -210,10 +216,22 @@ export function Archive({ adminName }: Props) {
                     <span className={`badge badge-${job.status === 'complete' ? 'open' : job.status === 'error' ? 'lost' : 'working'}`}>
                       {job.status}
                     </span>
+                    {job.status === 'error' && job.error && (
+                      <div style={{ fontSize: 11, color: 'var(--red)', marginTop: 3, maxWidth: 260 }}
+                           title={job.error}>
+                        {job.error.length > 80 ? job.error.slice(0, 80) + '…' : job.error}
+                      </div>
+                    )}
                   </td>
                   <td>{job.started_by || '—'}</td>
                   <td>{job.started_at?.slice(0, 16)}</td>
-                  <td>
+                  <td style={{ whiteSpace: 'nowrap' }}>
+                    {job.status === 'error' && (
+                      <button className="btn btn-sm btn-secondary"
+                        onClick={() => setActiveJob(job)}>
+                        Details
+                      </button>
+                    )}
                     {job.folder_url && job.status === 'complete' && (
                       <a className="btn btn-sm btn-secondary" href={job.folder_url}
                          target="_blank" rel="noreferrer">
